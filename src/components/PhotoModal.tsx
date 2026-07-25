@@ -1,5 +1,6 @@
 import { Download, X } from "lucide-react";
 import { useEffect } from "react";
+import { photoRepository } from "../services";
 import type { PhotoViewModel } from "../types/photo";
 import { formatFileSize, formatUploadDate } from "../utils/format";
 
@@ -23,13 +24,17 @@ export default function PhotoModal({ photo, onClose }: PhotoModalProps) {
   if (!photo) return null;
   const currentPhoto = photo;
 
-  function downloadOriginal() {
+  async function downloadOriginal() {
+    const originalUrl = await photoRepository.getOriginalDownloadUrl(currentPhoto.id);
     const link = document.createElement("a");
-    link.href = currentPhoto.originalUrl;
+    link.href = originalUrl;
     link.download = currentPhoto.originalFileName || `momente-${currentPhoto.id}.jpg`;
     document.body.appendChild(link);
     link.click();
     link.remove();
+    if (originalUrl.startsWith("blob:")) {
+      window.setTimeout(() => URL.revokeObjectURL(originalUrl), 1000);
+    }
   }
 
   return (
@@ -53,7 +58,7 @@ export default function PhotoModal({ photo, onClose }: PhotoModalProps) {
             <span>{formatUploadDate(photo.uploadedAt)}</span>
             <span>Origjinali: {formatFileSize(photo.originalSize)}</span>
           </div>
-          <button className="button button-primary button-full" type="button" onClick={downloadOriginal}>
+          <button className="button button-primary button-full" type="button" onClick={() => void downloadOriginal()}>
             <Download size={18} /> Shkarko origjinalin
           </button>
         </div>

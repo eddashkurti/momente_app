@@ -56,6 +56,13 @@ class LocalPhotoRepository implements PhotoRepository {
     emitPhotosUpdated();
   }
 
+  async getOriginalDownloadUrl(id: string) {
+    const db = await this.dbPromise;
+    const photo = await db.get("photos", id);
+    if (!photo?.originalBlob) throw new Error("Original photo not found.");
+    return URL.createObjectURL(photo.originalBlob);
+  }
+
   async clearAll() {
     const db = await this.dbPromise;
     await db.clear("photos");

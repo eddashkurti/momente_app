@@ -11,8 +11,9 @@ export interface PhotoRecord {
   uploaderSessionId: string;
   uploadedAt: string;
   sequence: number;
-  originalBlob: Blob;
-  optimizedBlob: Blob;
+  originalBlob?: Blob;
+  optimizedBlob?: Blob;
+  optimizedUrl?: string;
 }
 
 export type NewPhotoRecord = Omit<PhotoRecord, "id" | "uploadedAt" | "sequence">;
@@ -25,5 +26,4 @@ export interface PhotoStats {
 
 export interface PhotoViewModel extends PhotoRecord {
   optimizedUrl: string;
-  originalUrl: string;
 }

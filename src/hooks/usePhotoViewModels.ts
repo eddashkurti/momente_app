@@ -6,8 +6,9 @@ export function usePhotoViewModels(photos: PhotoRecord[]): PhotoViewModel[] {
     () =>
       photos.map((photo) => ({
         ...photo,
-        optimizedUrl: URL.createObjectURL(photo.optimizedBlob),
-        originalUrl: URL.createObjectURL(photo.originalBlob),
+        optimizedUrl:
+          photo.optimizedUrl ??
+          (photo.optimizedBlob ? URL.createObjectURL(photo.optimizedBlob) : ""),
       })),
     [photos],
   );
@@ -15,8 +16,9 @@ export function usePhotoViewModels(photos: PhotoRecord[]): PhotoViewModel[] {
   useEffect(
     () => () => {
       viewModels.forEach((photo) => {
-        URL.revokeObjectURL(photo.optimizedUrl);
-        URL.revokeObjectURL(photo.originalUrl);
+        if (!photo.optimizedUrl?.startsWith("http")) {
+          URL.revokeObjectURL(photo.optimizedUrl);
+        }
       });
     },
     [viewModels],

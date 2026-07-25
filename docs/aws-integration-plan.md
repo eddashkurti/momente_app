@@ -1,4 +1,9 @@
-# AWS Integration Plan
+# AWS Integration and Deployment Plan
+
+Implementation status: the SAM infrastructure, Python Lambda handlers, and frontend
+AWS repository adapter are now included in this repository. The remaining steps
+require the target AWS account: configure budgets, deploy the stack, create the
+organizer account, set the frontend environment variables, and perform device tests.
 
 This phase begins only after the local frontend is visually approved and tested on phones.
 
@@ -60,14 +65,15 @@ Fields:
 
 A status/time index may be added if emergency deletion and multiple events require it.
 
-## 4. Build Python Lambda functions
+## 4. Python Lambda functions
 
-Start with four functions:
+The backend includes five functions:
 
 1. `create_upload_urls`
 2. `create_submission`
 3. `list_photos`
 4. `delete_photo`
+5. `get_download_url`
 
 Do not add moderation workflows. Every successfully confirmed upload becomes `ACTIVE` and is immediately eligible for the gallery and slideshow.
 
@@ -86,9 +92,9 @@ For each selected photo:
 
 The backend must not trust sizes, MIME types, keys, or event IDs supplied by the browser without validation.
 
-## 6. Replace the local repository
+## 6. Select the AWS repository
 
-Create:
+Implemented in:
 
 ```text
 src/services/awsPhotoRepository.ts
@@ -100,7 +106,8 @@ It must implement the existing `PhotoRepository` contract. Then select the imple
 VITE_STORAGE_MODE=aws
 ```
 
-The pages, components, gallery, slideshow, and upload UX remain unchanged.
+The pages, components, gallery, slideshow, and upload UX remain unchanged. Local
+mode remains available through `VITE_STORAGE_MODE=local`.
 
 ## 7. Host frontend
 

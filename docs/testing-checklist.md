@@ -1,5 +1,22 @@
 # Testing Checklist
 
+## Backend before production
+
+- [ ] `sam validate --lint`
+- [ ] `sam build`
+- [ ] Deploy to a non-production AWS stack
+- [ ] Confirm S3 Block Public Access is enabled
+- [ ] Confirm S3 CORS contains only the frontend origin
+- [ ] Confirm API CORS contains only the frontend origin
+- [ ] Confirm an unsupported MIME type is rejected
+- [ ] Confirm an object larger than 10 MB is rejected
+- [ ] Confirm submission fails unless both objects exist
+- [ ] Confirm gallery output never contains an original URL
+- [ ] Confirm original URL expires after two minutes
+- [ ] Confirm delete returns 401 without a Cognito token
+- [ ] Confirm public endpoints return 410 after the closing timestamp
+- [ ] Configure AWS Budget alerts before production deployment
+
 ## Upload
 
 - [ ] Select one photo

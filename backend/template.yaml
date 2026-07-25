@@ -1,0 +1,252 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Momente wedding photo API
+
+Parameters:
+  AllowedOrigin:
+    Type: String
+    Description: Exact HTTPS origin of the production frontend
+  EventId:
+    Type: String
+    Default: enis-agnesa-2026
+  GalleryClosesAt:
+    Type: String
+    Default: "2026-08-11T21:59:59Z"
+
+Globals:
+  Function:
+    Runtime: python3.12
+    CodeUri: src/
+    MemorySize: 256
+    Timeout: 15
+    Tracing: Active
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref PhotoTable
+        BUCKET_NAME: !Ref PhotoBucket
+        EVENT_ID: !Ref EventId
+        GALLERY_CLOSES_AT: !Ref GalleryClosesAt
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
+  HttpApi:
+    CorsConfiguration:
+      AllowOrigins:
+        - !Ref AllowedOrigin
+      AllowHeaders:
+        - authorization
+        - content-type
+      AllowMethods:
+        - GET
+        - POST
+        - DELETE
+        - OPTIONS
+      MaxAge: 600
+
+Resources:
+  MomenteApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: "$default"
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 50
+        ThrottlingRateLimit: 25
+      Auth:
+        Authorizers:
+          OrganizerAuthorizer:
+            JwtConfiguration:
+              issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${OrganizerUserPool}"
+              audience:
+                - !Ref OrganizerUserPoolClient
+            IdentitySource: "$request.header.Authorization"
+
+  PhotoBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - !Ref AllowedOrigin
+            AllowedMethods:
+              - PUT
+              - GET
+            AllowedHeaders:
+              - "*"
+            ExposedHeaders:
+              - ETag
+            MaxAge: 600
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+
+  PhotoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: ByPhotoId
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  OrganizerUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "momente-${EventId}-organizers"
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+
+  OrganizerUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref OrganizerUserPool
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+  CreateUploadUrlsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.create_upload_urls.handler
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref PhotoBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PhotoTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MomenteApi
+            Path: /api/events/{eventId}/uploads/presign
+            Method: POST
+
+  CreateSubmissionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.create_submission.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref PhotoBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PhotoTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MomenteApi
+            Path: /api/events/{eventId}/submissions
+            Method: POST
+
+  ListPhotosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.list_photos.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref PhotoBucket
+        - DynamoDBReadPolicy:
+            TableName: !Ref PhotoTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MomenteApi
+            Path: /api/events/{eventId}/photos
+            Method: GET
+
+  DownloadPhotoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.get_download_url.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref PhotoBucket
+        - DynamoDBReadPolicy:
+            TableName: !Ref PhotoTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MomenteApi
+            Path: /api/events/{eventId}/photos/{photoId}/download
+            Method: POST
+
+  DeletePhotoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.delete_photo.handler
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref PhotoBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PhotoTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MomenteApi
+            Path: /api/admin/events/{eventId}/photos/{photoId}
+            Method: DELETE
+            Auth:
+              Authorizer: OrganizerAuthorizer
+
+Outputs:
+  ApiBaseUrl:
+    Value: !Sub "https://${MomenteApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
+  PhotoBucketName:
+    Value: !Ref PhotoBucket
+  PhotoTableName:
+    Value: !Ref PhotoTable
+  OrganizerUserPoolId:
+    Value: !Ref OrganizerUserPool
+  OrganizerUserPoolClientId:
+    Value: !Ref OrganizerUserPoolClient

@@ -6,7 +6,9 @@ Guests open one QR-code link, upload up to five photos, optionally add their nam
 
 ## Current build
 
-This repository contains the complete local frontend prototype. It deliberately uses a repository abstraction so the browser-based local storage can later be replaced with AWS without changing the pages or core user experience.
+This repository contains the frontend plus a deployable AWS SAM backend. Local mode
+uses IndexedDB for development; AWS mode uploads directly to private S3 through
+presigned URLs and stores gallery metadata in DynamoDB.
 
 ### Included
 
@@ -105,7 +107,7 @@ PhotoRepository interface
         |
         +-- LocalPhotoRepository  (current IndexedDB prototype)
         |
-        +-- AwsPhotoRepository    (next phase)
+        +-- AwsPhotoRepository    (production API + private S3)
 ```
 
 This separation is intentional. The AWS integration will implement the same operations:
@@ -117,7 +119,7 @@ This separation is intentional. The AWS integration will implement the same oper
 
 No page should need to know whether data comes from IndexedDB, API Gateway, S3, or DynamoDB.
 
-## Planned AWS architecture
+## AWS architecture
 
 ```text
 Guest phone
@@ -168,6 +170,22 @@ It contains:
 - footer text
 
 Environment placeholders are documented in `.env.example`.
+
+For local IndexedDB development:
+
+```text
+VITE_STORAGE_MODE=local
+```
+
+For the deployed backend:
+
+```text
+VITE_STORAGE_MODE=aws
+VITE_API_BASE_URL=https://<api-id>.execute-api.<region>.amazonaws.com
+VITE_EVENT_ID=enis-agnesa-2026
+```
+
+Backend deployment instructions are in [`backend/README.md`](backend/README.md).
 
 ## Security decisions
 

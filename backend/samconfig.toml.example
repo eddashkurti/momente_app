@@ -1,0 +1,8 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "momente-backend"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "AllowedOrigin=\"https://example.com\" EventId=\"enis-agnesa-2026\" GalleryClosesAt=\"2026-08-11T21:59:59Z\""
+confirm_changeset = true

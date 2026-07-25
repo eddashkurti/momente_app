@@ -5,3 +5,7 @@ dist
 .DS_Store
 coverage
 *.log
+__pycache__/
+*.py[cod]
+.aws-sam/
+backend/samconfig.toml
