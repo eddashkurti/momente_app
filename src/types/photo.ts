@@ -15,7 +15,7 @@ export interface PhotoRecord {
   optimizedBlob: Blob;
 }
 
-export interface NewPhotoRecord extends Omit<PhotoRecord, "id" | "uploadedAt" | "sequence"> {}
+export type NewPhotoRecord = Omit<PhotoRecord, "id" | "uploadedAt" | "sequence">;
 
 export interface PhotoStats {
   photoCount: number;
