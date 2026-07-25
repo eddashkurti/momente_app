@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from botocore.exceptions import ClientError
 
-from common.aws import s3, table
+from common.aws import app_is_enabled, s3, table
 from common.config import BUCKET_NAME, gallery_is_open
 from common.http import error, parse_json, path_parameter, response
 from common.validation import ValidationError, validate_event, validate_submission
@@ -20,6 +20,8 @@ def handler(event, _context):
     try:
         event_id = path_parameter(event, "eventId")
         validate_event(event_id)
+        if not app_is_enabled(event_id):
+            return error(503, "APP_DISABLED", "Momente is temporarily disabled by its cost guard.")
         if not gallery_is_open():
             return error(410, "GALLERY_CLOSED", "The public gallery is closed.")
         photos = validate_submission(parse_json(event).get("photos"))

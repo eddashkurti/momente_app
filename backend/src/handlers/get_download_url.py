@@ -1,4 +1,4 @@
-from common.aws import find_photo, s3
+from common.aws import app_is_enabled, find_photo, s3
 from common.config import BUCKET_NAME, DOWNLOAD_URL_TTL, gallery_is_open
 from common.http import error, path_parameter, response
 from common.validation import ValidationError, validate_event
@@ -10,6 +10,8 @@ def handler(event, _context):
         validate_event(event_id)
     except ValidationError as exc:
         return error(400, "INVALID_REQUEST", str(exc))
+    if not app_is_enabled(event_id):
+        return error(503, "APP_DISABLED", "Momente is temporarily disabled by its cost guard.")
     if not gallery_is_open():
         return error(410, "GALLERY_CLOSED", "The public gallery is closed.")
     photo = find_photo(event_id, path_parameter(event, "photoId"))

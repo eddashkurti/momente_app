@@ -3,7 +3,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-from common.aws import s3, table
+from common.aws import app_is_enabled, s3, table
 from common.config import BUCKET_NAME, UPLOAD_URL_TTL, gallery_is_open
 from common.http import error, parse_json, path_parameter, response
 from common.validation import EXTENSIONS, ValidationError, validate_event, validate_presign_files
@@ -13,6 +13,8 @@ def handler(event, _context):
     try:
         event_id = path_parameter(event, "eventId")
         validate_event(event_id)
+        if not app_is_enabled(event_id):
+            return error(503, "APP_DISABLED", "Momente is temporarily disabled by its cost guard.")
         if not gallery_is_open():
             return error(410, "GALLERY_CLOSED", "The public gallery is closed.")
         files = validate_presign_files(parse_json(event).get("files"))

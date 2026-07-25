@@ -12,6 +12,17 @@ Parameters:
   GalleryClosesAt:
     Type: String
     Default: "2026-08-11T21:59:59Z"
+  EmergencyBudgetUSD:
+    Type: Number
+    Default: 20
+    MinValue: 1
+  BudgetEmail:
+    Type: String
+    Default: shkurtiedda@gmail.com
+  PhotoRetentionDays:
+    Type: Number
+    Default: 90
+    MinValue: 30
 
 Globals:
   Function:
@@ -27,6 +38,8 @@ Globals:
         EVENT_ID: !Ref EventId
         GALLERY_CLOSES_AT: !Ref GalleryClosesAt
         ALLOWED_ORIGIN: !Ref AllowedOrigin
+        IMAGE_BASE_URL: !Sub "https://${PhotoDistribution.DomainName}"
+        DISTRIBUTION_ID: !Ref PhotoDistribution
   HttpApi:
     CorsConfiguration:
       AllowOrigins:
@@ -47,8 +60,8 @@ Resources:
     Properties:
       StageName: "$default"
       DefaultRouteSettings:
-        ThrottlingBurstLimit: 50
-        ThrottlingRateLimit: 25
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
       Auth:
         Authorizers:
           OrganizerAuthorizer:
@@ -88,6 +101,104 @@ Resources:
             Status: Enabled
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 1
+          - Id: ExpireOriginalPhotos
+            Status: Enabled
+            Prefix: originals/
+            ExpirationInDays: !Ref PhotoRetentionDays
+          - Id: ExpireOptimizedPhotos
+            Status: Enabled
+            Prefix: optimized/
+            ExpirationInDays: !Ref PhotoRetentionDays
+
+  PhotoOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "momente-${AWS::StackName}-photos"
+        Description: Private access to optimized Momente photos
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  PhotoResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "momente-${AWS::StackName}-photo-cors"
+        CorsConfig:
+          AccessControlAllowCredentials: false
+          AccessControlAllowHeaders:
+            Items:
+              - "*"
+          AccessControlAllowMethods:
+            Items:
+              - GET
+              - HEAD
+              - OPTIONS
+          AccessControlAllowOrigins:
+            Items:
+              - !Ref AllowedOrigin
+          AccessControlExposeHeaders:
+            Items:
+              - ETag
+          AccessControlMaxAgeSec: 600
+          OriginOverride: true
+        SecurityHeadersConfig:
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: DENY
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: no-referrer
+            Override: true
+
+  PhotoDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: Momente optimized wedding photos
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: PhotoBucketOrigin
+            DomainName: !GetAtt PhotoBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt PhotoOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: PhotoBucketOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ResponseHeadersPolicyId: !Ref PhotoResponseHeadersPolicy
+          Compress: true
+
+  PhotoBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PhotoBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontOptimizedPhotoReads
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${PhotoBucket.Arn}/optimized/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
 
   PhotoTable:
     Type: AWS::DynamoDB::Table
@@ -229,6 +340,11 @@ Resources:
             BucketName: !Ref PhotoBucket
         - DynamoDBCrudPolicy:
             TableName: !Ref PhotoTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cloudfront:CreateInvalidation
+              Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
       Events:
         Api:
           Type: HttpApi
@@ -238,6 +354,87 @@ Resources:
             Method: DELETE
             Auth:
               Authorizer: OrganizerAuthorizer
+
+  ShutdownTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-budget-shutdown"
+
+  ShutdownTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref ShutdownTopic
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowAWSBudgets
+            Effect: Allow
+            Principal:
+              Service: budgets.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref ShutdownTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub "arn:${AWS::Partition}:budgets::${AWS::AccountId}:*"
+
+  ShutdownAppFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.shutdown_app.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PhotoTable
+      Events:
+        BudgetNotification:
+          Type: SNS
+          Properties:
+            Topic: !Ref ShutdownTopic
+
+  SetAppStateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.set_app_state.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PhotoTable
+
+  EmergencyCostBudget:
+    Type: AWS::Budgets::Budget
+    DependsOn: ShutdownTopicPolicy
+    Properties:
+      Budget:
+        BudgetName: Momente-Emergency-Stop
+        BudgetLimit:
+          Amount: !Ref EmergencyBudgetUSD
+          Unit: USD
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        CostTypes:
+          IncludeCredit: false
+          IncludeDiscount: true
+          IncludeOtherSubscription: true
+          IncludeRecurring: true
+          IncludeRefund: false
+          IncludeSubscription: true
+          IncludeSupport: true
+          IncludeTax: true
+          IncludeUpfront: true
+          UseAmortized: false
+          UseBlended: false
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: SNS
+              Address: !Ref ShutdownTopic
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
 
 Outputs:
   ApiBaseUrl:
@@ -250,3 +447,9 @@ Outputs:
     Value: !Ref OrganizerUserPool
   OrganizerUserPoolClientId:
     Value: !Ref OrganizerUserPoolClient
+  OptimizedPhotoBaseUrl:
+    Value: !Sub "https://${PhotoDistribution.DomainName}"
+  ShutdownTopicArn:
+    Value: !Ref ShutdownTopic
+  SetAppStateFunctionName:
+    Value: !Ref SetAppStateFunction

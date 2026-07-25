@@ -16,6 +16,11 @@
 - [ ] Confirm delete returns 401 without a Cognito token
 - [ ] Confirm public endpoints return 410 after the closing timestamp
 - [ ] Configure AWS Budget alerts before production deployment
+- [ ] Invoke manual shutdown and confirm all public endpoints return 503
+- [ ] Publish a controlled SNS test and confirm the budget shutdown path
+- [ ] Restore the app and confirm public endpoints return 200
+- [ ] Confirm optimized photo URLs remain stable across list refreshes
+- [ ] Confirm emergency deletion invalidates the CloudFront-cached image
 
 ## Upload
 

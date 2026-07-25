@@ -4,8 +4,8 @@ from decimal import Decimal
 
 from boto3.dynamodb.conditions import Key
 
-from common.aws import s3, table
-from common.config import BUCKET_NAME, DOWNLOAD_URL_TTL, gallery_is_open
+from common.aws import app_is_enabled, table
+from common.config import IMAGE_BASE_URL, gallery_is_open
 from common.http import error, path_parameter, response
 from common.validation import ValidationError, validate_event
 
@@ -28,6 +28,8 @@ def handler(event, _context):
     try:
         event_id = path_parameter(event, "eventId")
         validate_event(event_id)
+        if not app_is_enabled(event_id):
+            return error(503, "APP_DISABLED", "Momente is temporarily disabled by its cost guard.")
         if not gallery_is_open():
             return error(410, "GALLERY_CLOSED", "The public gallery is closed.")
         query = event.get("queryStringParameters") or {}
@@ -48,11 +50,7 @@ def handler(event, _context):
     for item in result.get("Items", []):
         if item.get("status") != "ACTIVE":
             continue
-        optimized_url = s3.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": BUCKET_NAME, "Key": item["optimizedKey"]},
-            ExpiresIn=DOWNLOAD_URL_TTL * 5,
-        )
+        optimized_url = f"{IMAGE_BASE_URL}/{item['optimizedKey']}"
         photos.append(
             {
                 "photoId": item["photoId"],

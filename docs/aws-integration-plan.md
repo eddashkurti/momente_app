@@ -152,3 +152,19 @@ After closing:
 - keep private organizer access
 - download and back up originals
 - later apply lifecycle cleanup
+
+## 11. Cost circuit breaker
+
+The deployed stack includes:
+
+- a `$20 USD` monthly gross-cost budget (credits excluded)
+- email notification to the account owner
+- SNS delivery to a shutdown Lambda
+- a DynamoDB `CONTROL` record checked by all public handlers
+- a private manual enable/disable Lambda
+- API Gateway throttling of 10 requests/second with a burst of 20
+- private CloudFront caching for optimized images
+- 90-day S3 lifecycle expiration
+
+This does not constitute a hard cap. AWS Budgets uses billing data refreshed at
+least daily, so actual cost can exceed the threshold before shutdown occurs.

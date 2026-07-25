@@ -1,5 +1,7 @@
-from common.aws import find_photo, s3, table
-from common.config import BUCKET_NAME
+import time
+
+from common.aws import cloudfront, find_photo, s3, table
+from common.config import BUCKET_NAME, DISTRIBUTION_ID
 from common.http import error, path_parameter, response
 from common.validation import ValidationError, validate_event
 
@@ -28,4 +30,12 @@ def handler(event, _context):
             ]
         },
     )
+    if DISTRIBUTION_ID:
+        cloudfront.create_invalidation(
+            DistributionId=DISTRIBUTION_ID,
+            InvalidationBatch={
+                "Paths": {"Quantity": 1, "Items": [f"/{photo['optimizedKey']}"]},
+                "CallerReference": f"delete-{photo['photoId']}-{time.time_ns()}",
+            },
+        )
     return response(200, {"deleted": True, "photoId": photo["photoId"]})
