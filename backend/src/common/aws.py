@@ -1,10 +1,17 @@
+import os
+
 import boto3
+from botocore.config import Config
 
 from common.config import BUCKET_NAME, TABLE_NAME
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(TABLE_NAME)
-s3 = boto3.client("s3")
+s3 = boto3.client(
+    "s3",
+    region_name=os.environ.get("AWS_REGION"),
+    config=Config(signature_version="s3v4", s3={"addressing_style": "virtual"}),
+)
 
 
 def find_photo(event_id, photo_id):
