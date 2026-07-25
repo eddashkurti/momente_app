@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import time
 
 from common.aws import cloudfront, set_photo_distribution_enabled, table
-from common.config import DISTRIBUTION_ID, EVENT_ID
+from common.config import DISTRIBUTION_ID, EVENT_ID, FRONTEND_DISTRIBUTION_ID
 
 
 def handler(event, _context):
@@ -36,9 +36,19 @@ def handler(event, _context):
                 "CallerReference": f"budget-shutdown-{time.time_ns()}",
             },
         )
+    frontend_changed = set_photo_distribution_enabled(FRONTEND_DISTRIBUTION_ID, False)
+    if FRONTEND_DISTRIBUTION_ID:
+        cloudfront.create_invalidation(
+            DistributionId=FRONTEND_DISTRIBUTION_ID,
+            InvalidationBatch={
+                "Paths": {"Quantity": 1, "Items": ["/*"]},
+                "CallerReference": f"frontend-budget-shutdown-{time.time_ns()}",
+            },
+        )
     return {
         "disabled": True,
         "eventId": EVENT_ID,
         "disabledAt": disabled_at,
         "distributionDisableStarted": distribution_changed,
+        "frontendDistributionDisableStarted": frontend_changed,
     }

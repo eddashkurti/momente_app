@@ -40,6 +40,7 @@ Globals:
         ALLOWED_ORIGIN: !Ref AllowedOrigin
         IMAGE_BASE_URL: !Sub "https://${PhotoDistribution.DomainName}"
         DISTRIBUTION_ID: !Ref PhotoDistribution
+        FRONTEND_DISTRIBUTION_ID: !Ref FrontendDistribution
   HttpApi:
     CorsConfiguration:
       AllowOrigins:
@@ -199,6 +200,85 @@ Resources:
             Condition:
               StringEquals:
                 AWS:SourceArn: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  FrontendOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "momente-${AWS::StackName}-frontend"
+        Description: Private access to the Momente React frontend
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: Momente live React frontend
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: FrontendBucketOrigin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt FrontendOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: FrontendBucketOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          Compress: true
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontFrontendReads
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}"
 
   PhotoTable:
     Type: AWS::DynamoDB::Table
@@ -393,7 +473,9 @@ Resources:
                 - cloudfront:CreateInvalidation
                 - cloudfront:GetDistributionConfig
                 - cloudfront:UpdateDistribution
-              Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
+              Resource:
+                - !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
+                - !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}"
       Events:
         BudgetNotification:
           Type: SNS
@@ -412,7 +494,9 @@ Resources:
               Action:
                 - cloudfront:GetDistributionConfig
                 - cloudfront:UpdateDistribution
-              Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
+              Resource:
+                - !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
+                - !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}"
 
   EmergencyCostBudget:
     Type: AWS::Budgets::Budget
@@ -466,3 +550,9 @@ Outputs:
     Value: !Ref ShutdownTopic
   SetAppStateFunctionName:
     Value: !Ref SetAppStateFunction
+  FrontendBucketName:
+    Value: !Ref FrontendBucket
+  FrontendDistributionId:
+    Value: !Ref FrontendDistribution
+  FrontendUrl:
+    Value: !Sub "https://${FrontendDistribution.DomainName}"

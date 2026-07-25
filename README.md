@@ -35,7 +35,7 @@ presigned URLs and stores gallery metadata in DynamoDB.
 - End-of-wedding thank-you sequence
 - Public-gallery closing date configured for 11.08.2026 at 23:59
 - Developer-only local controls for demo seeding and deletion
-- Signature footer: “Momente u krijua me 🤍 nga Edda Shkurti për Enisin dhe Agnesën.”
+- Signature footer: “Momente u krijua me 🤍 nga Edda për Enisin dhe Agnesën.”
 
 ## Technology
 
@@ -49,6 +49,17 @@ presigned URLs and stores gallery metadata in DynamoDB.
 - `qrcode.react`
 - Lucide icons
 - Locally bundled Cormorant Garamond and Manrope fonts
+
+## Live AWS website
+
+The production frontend is hosted privately in S3 and delivered through CloudFront:
+
+- Website: https://dyy02nv8viwmb.cloudfront.net
+- TV slideshow: https://dyy02nv8viwmb.cloudfront.net/slideshow
+
+Although the frontend files are served from S3, the website is live and dynamic:
+uploads and gallery refreshes use API Gateway, Lambda, DynamoDB, S3 and CloudFront.
+The slideshow QR code points guests to the production website.
 
 ## Run locally
 

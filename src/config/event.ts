@@ -25,7 +25,7 @@ export const eventConfig = {
     thankYouDurationMs: 12000,
   },
   footer:
-    "Momente u krijua me 🤍 nga Edda Shkurti për Enisin dhe Agnesën.",
+    "Momente u krijua me 🤍 nga Edda për Enisin dhe Agnesën.",
 } as const;
 
 export function isGalleryOpen(now = new Date()) {

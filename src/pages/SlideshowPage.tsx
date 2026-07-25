@@ -13,7 +13,13 @@ export default function SlideshowPage() {
   const [paused, setPaused] = useState(false);
   const [featured, setFeatured] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
-  const uploadUrl = useMemo(() => `${window.location.origin}/`, []);
+  const uploadUrl = useMemo(() => {
+    const configuredUrl = (import.meta.env.VITE_PUBLIC_APP_URL as string | undefined)?.replace(
+      /\/$/,
+      "",
+    );
+    return `${configuredUrl || window.location.origin}/`;
+  }, []);
   const current = viewModels[index] ?? null;
 
   useEffect(() => {
