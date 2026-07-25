@@ -387,6 +387,13 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PhotoTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cloudfront:CreateInvalidation
+                - cloudfront:GetDistributionConfig
+                - cloudfront:UpdateDistribution
+              Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
       Events:
         BudgetNotification:
           Type: SNS
@@ -400,6 +407,12 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PhotoTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cloudfront:GetDistributionConfig
+                - cloudfront:UpdateDistribution
+              Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
 
   EmergencyCostBudget:
     Type: AWS::Budgets::Budget

@@ -35,3 +35,19 @@ def app_is_enabled(event_id):
         ConsistentRead=True,
     ).get("Item")
     return not control or control.get("enabled", True)
+
+
+def set_photo_distribution_enabled(distribution_id, enabled):
+    if not distribution_id:
+        return False
+    result = cloudfront.get_distribution_config(Id=distribution_id)
+    config = result["DistributionConfig"]
+    if config["Enabled"] == enabled:
+        return False
+    config["Enabled"] = enabled
+    cloudfront.update_distribution(
+        Id=distribution_id,
+        IfMatch=result["ETag"],
+        DistributionConfig=config,
+    )
+    return True

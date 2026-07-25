@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from common.aws import table
-from common.config import EVENT_ID
+from common.aws import set_photo_distribution_enabled, table
+from common.config import DISTRIBUTION_ID, EVENT_ID
 
 
 def handler(event, _context):
@@ -17,4 +17,10 @@ def handler(event, _context):
             "reason": event.get("reason", "MANUAL"),
         }
     )
-    return {"enabled": enabled, "eventId": EVENT_ID, "changedAt": changed_at}
+    distribution_changed = set_photo_distribution_enabled(DISTRIBUTION_ID, enabled)
+    return {
+        "enabled": enabled,
+        "eventId": EVENT_ID,
+        "changedAt": changed_at,
+        "distributionChangeStarted": distribution_changed,
+    }

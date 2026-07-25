@@ -75,8 +75,10 @@ python -m unittest discover -s tests -v
 
 `EmergencyCostBudget` monitors gross account cost (credits excluded) and publishes to
 SNS after actual monthly cost exceeds `$20`. The shutdown Lambda writes a disabled
-control record to DynamoDB. Upload, confirmation, gallery, and original-download
-handlers check that record before doing work.
+control record to DynamoDB, disables the CloudFront photo distribution, and
+invalidates cached photos. Upload, confirmation, gallery, and original-download
+handlers check the control record before doing work. CloudFront disable propagation
+can take several minutes.
 
 AWS billing data is updated at least daily. This is an emergency circuit breaker,
 not a real-time or guaranteed hard spending cap. Costs can pass the threshold before

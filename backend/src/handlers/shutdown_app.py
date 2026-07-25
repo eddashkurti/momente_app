@@ -1,8 +1,10 @@
 import json
 from datetime import datetime, timezone
 
-from common.aws import table
-from common.config import EVENT_ID
+import time
+
+from common.aws import cloudfront, set_photo_distribution_enabled, table
+from common.config import DISTRIBUTION_ID, EVENT_ID
 
 
 def handler(event, _context):
@@ -25,4 +27,18 @@ def handler(event, _context):
             "budgetMessages": messages,
         }
     )
-    return {"disabled": True, "eventId": EVENT_ID, "disabledAt": disabled_at}
+    distribution_changed = set_photo_distribution_enabled(DISTRIBUTION_ID, False)
+    if DISTRIBUTION_ID:
+        cloudfront.create_invalidation(
+            DistributionId=DISTRIBUTION_ID,
+            InvalidationBatch={
+                "Paths": {"Quantity": 1, "Items": ["/*"]},
+                "CallerReference": f"budget-shutdown-{time.time_ns()}",
+            },
+        )
+    return {
+        "disabled": True,
+        "eventId": EVENT_ID,
+        "disabledAt": disabled_at,
+        "distributionDisableStarted": distribution_changed,
+    }
