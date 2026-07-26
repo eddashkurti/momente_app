@@ -33,6 +33,8 @@ interface ApiErrorBody {
   error?: { message?: string };
 }
 
+const uploadAttempts = 3;
+
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
 const configuredEventId =
   (import.meta.env.VITE_EVENT_ID as string | undefined) || eventConfig.eventId;
@@ -73,6 +75,32 @@ function toPhotoRecord(photo: ApiPhoto): PhotoRecord {
   };
 }
 
+async function uploadBlob(url: string, contentType: string, body: Blob) {
+  let lastStatus: number | null = null;
+  for (let attempt = 1; attempt <= uploadAttempts; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: { "content-type": contentType },
+        body,
+      });
+      if (response.ok) return;
+      lastStatus = response.status;
+      if (response.status >= 400 && response.status < 500) break;
+    } catch {
+      // Temporary mobile-network interruptions are retried below.
+    }
+    if (attempt < uploadAttempts) {
+      await new Promise((resolve) => globalThis.setTimeout(resolve, attempt * 600));
+    }
+  }
+  throw new Error(
+    lastStatus
+      ? `Photo upload failed (${lastStatus}).`
+      : "Photo upload failed because the connection was interrupted.",
+  );
+}
+
 class AwsPhotoRepository implements PhotoRepository {
   private stats: PhotoStats = {
     photoCount: 0,
@@ -109,29 +137,16 @@ class AwsPhotoRepository implements PhotoRepository {
       `/api/events/${encodeURIComponent(configuredEventId)}/uploads/presign`,
       { method: "POST", body: JSON.stringify({ files }) },
     );
-    await Promise.all(
-      presigned.uploads.flatMap((upload, index) => {
-        const record = records[index];
-        if (!record.originalBlob || !record.optimizedBlob) {
-          throw new Error("Photo blobs are required for upload.");
-        }
-        return [
-          fetch(upload.originalUploadUrl, {
-            method: "PUT",
-            headers: { "content-type": record.originalContentType },
-            body: record.originalBlob,
-          }),
-          fetch(upload.optimizedUploadUrl, {
-            method: "PUT",
-            headers: { "content-type": "image/jpeg" },
-            body: record.optimizedBlob,
-          }),
-        ];
-      }),
-    ).then((responses) => {
-      const failed = responses.find((response) => !response.ok);
-      if (failed) throw new Error(`Photo upload failed (${failed.status}).`);
-    });
+    for (const [index, upload] of presigned.uploads.entries()) {
+      const record = records[index];
+      if (!record.originalBlob || !record.optimizedBlob) {
+        throw new Error("Photo blobs are required for upload.");
+      }
+      await Promise.all([
+        uploadBlob(upload.originalUploadUrl, record.originalContentType, record.originalBlob),
+        uploadBlob(upload.optimizedUploadUrl, "image/jpeg", record.optimizedBlob),
+      ]);
+    }
     await apiRequest(`/api/events/${encodeURIComponent(configuredEventId)}/submissions`, {
       method: "POST",
       body: JSON.stringify({
