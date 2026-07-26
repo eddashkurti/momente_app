@@ -2,7 +2,10 @@ import { LogOut, ShieldCheck, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { usePhotos } from "../hooks/usePhotos";
 import { usePhotoViewModels } from "../hooks/usePhotoViewModels";
-import { deletePhotoAsOrganizer } from "../services/organizerApi";
+import {
+  deleteAllPhotosAsOrganizer,
+  deletePhotoAsOrganizer,
+} from "../services/organizerApi";
 import {
   completeNewOrganizerPassword,
   getOrganizerSession,
@@ -22,6 +25,7 @@ export default function OrganizerPage() {
   const [challenge, setChallenge] = useState<NewPasswordChallenge | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingAll, setDeletingAll] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -92,6 +96,31 @@ export default function OrganizerPage() {
       setMessage(caught instanceof Error ? caught.message : "Fotografia nuk mund të fshihej.");
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function removeAllPhotos() {
+    if (!accessToken || viewModels.length === 0) return;
+    const confirmed = window.confirm(
+      `Do të fshihen përgjithmonë të ${viewModels.length} fotografitë, origjinalet dhe kopjet e optimizuara. Ky veprim nuk mund të zhbëhet.`,
+    );
+    if (!confirmed) return;
+    const typed = window.prompt('Për të vazhduar, shkruani saktësisht: FSHI');
+    if (typed !== "FSHI") {
+      setMessage("Fshirja e të gjitha fotografive u anulua.");
+      return;
+    }
+
+    setDeletingAll(true);
+    setMessage(null);
+    try {
+      const result = await deleteAllPhotosAsOrganizer(accessToken);
+      await refresh();
+      setMessage(`${result.deleted} fotografi u fshinë.`);
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : "Fotografitë nuk mund të fshiheshin.");
+    } finally {
+      setDeletingAll(false);
     }
   }
 
@@ -171,9 +200,19 @@ export default function OrganizerPage() {
           <h1>Menaxho fotografitë</h1>
           <p>Fshini vetëm fotografitë që nuk duhet të shfaqen në galeri ose slideshow.</p>
         </div>
-        <button className="button button-secondary" type="button" onClick={logout}>
-          <LogOut size={17} /> Dil
-        </button>
+        <div className="organizer-actions">
+          <button
+            className="button button-danger"
+            type="button"
+            disabled={deletingAll || viewModels.length === 0}
+            onClick={() => void removeAllPhotos()}
+          >
+            <Trash2 size={17} /> {deletingAll ? "Duke fshirë…" : "Fshi të gjitha"}
+          </button>
+          <button className="button button-secondary" type="button" onClick={logout}>
+            <LogOut size={17} /> Dil
+          </button>
+        </div>
       </div>
 
       {message && <p className="organizer-message" role="status">{message}</p>}

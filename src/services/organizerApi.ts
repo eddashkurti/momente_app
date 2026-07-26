@@ -20,3 +20,22 @@ export async function deletePhotoAsOrganizer(photoId: string, accessToken: strin
     throw new Error(body?.error?.message || `Deletion failed (${response.status}).`);
   }
 }
+
+export async function deleteAllPhotosAsOrganizer(accessToken: string) {
+  if (!apiBaseUrl) throw new Error("The production API is not configured.");
+
+  const response = await fetch(
+    `${apiBaseUrl}/api/admin/events/${encodeURIComponent(eventId)}/photos`,
+    {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${accessToken}` },
+    },
+  );
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as
+      | { error?: { message?: string } }
+      | null;
+    throw new Error(body?.error?.message || `Bulk deletion failed (${response.status}).`);
+  }
+  return response.json() as Promise<{ deleted: number }>;
+}

@@ -415,6 +415,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: handlers.delete_photo.handler
+      Timeout: 60
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref PhotoBucket
@@ -426,6 +427,14 @@ Resources:
                 - cloudfront:CreateInvalidation
               Resource: !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${PhotoDistribution}"
       Events:
+        DeleteAll:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref MomenteApi
+            Path: /api/admin/events/{eventId}/photos
+            Method: DELETE
+            Auth:
+              Authorizer: OrganizerAuthorizer
         Api:
           Type: HttpApi
           Properties:
