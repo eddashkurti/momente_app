@@ -67,7 +67,6 @@ export default function UploadPage() {
       <div className="page-title">
         <span className="eyebrow">Ndaj një kujtim</span>
         <h1>Ngarko fotografitë e tua</h1>
-        <p>Mund të ngarkoni deri në 5 fotografi njëherësh. Emri dhe mesazhi janë plotësisht opsionalë.</p>
       </div>
 
       {successCount > 0 ? (

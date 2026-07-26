@@ -47,10 +47,12 @@ img { display: block; max-width: 100%; }
   border-bottom: 1px solid rgba(151, 121, 67, 0.14);
   backdrop-filter: blur(16px);
 }
-.header-inner { height: 78px; display: flex; align-items: center; justify-content: space-between; }
+.header-inner { position: relative; height: 78px; display: flex; align-items: center; justify-content: center; }
 .brand { display: inline-flex; flex-direction: column; gap: 1px; }
 .brand > span { font-family: "Cormorant Garamond", serif; font-size: 29px; font-weight: 600; letter-spacing: 0.035em; color: var(--ink); line-height: 0.95; }
 .brand small { font-size: 9px; letter-spacing: 0.17em; text-transform: uppercase; color: var(--taupe-500); }
+.header-home-link { position: absolute; left: 0; top: 50%; transform: translateY(-50%); }
+.header-home-link:hover { transform: translateY(-50%); }
 .main-nav { display: flex; align-items: center; gap: 6px; }
 .nav-link { display: inline-flex; align-items: center; gap: 7px; padding: 10px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--taupe-600); transition: 180ms ease; }
 .nav-link:hover { background: var(--cream-200); color: var(--ink); }
@@ -261,7 +263,6 @@ img { display: block; max-width: 100%; }
   .menu-button { display: grid; place-items: center; }
   .main-nav { position: absolute; top: 68px; left: 14px; right: 14px; display: none; flex-direction: column; align-items: stretch; padding: 10px; border: 1px solid rgba(183,151,93,.18); border-radius: 17px; background: #fffdf9; box-shadow: var(--shadow-card); }
   .main-nav-open { display: flex; }
-  .main-nav-back { position: static; display: flex; flex-direction: row; align-items: center; padding: 0; border: 0; background: transparent; box-shadow: none; }
   .nav-link { justify-content: center; }
   .hero { padding-top: 28px; }
   .invitation-card { min-height: 500px; padding: 55px 20px; border-radius: 24px; }

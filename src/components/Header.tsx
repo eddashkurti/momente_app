@@ -10,12 +10,11 @@ export default function Header() {
       <div className="page-container header-inner">
         <Link className="brand" to="/">
           <span>{eventConfig.appName}</span>
-          <small>{eventConfig.couple.display}</small>
         </Link>
 
         {!isHomePage && (
-          <nav className="main-nav main-nav-back" aria-label="Navigimi kryesor">
-            <Link className="nav-link nav-link-active" to="/">
+          <nav aria-label="Navigimi kryesor">
+            <Link className="nav-link nav-link-active header-home-link" to="/">
               Ballina
             </Link>
           </nav>
