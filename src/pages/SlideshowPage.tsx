@@ -1,4 +1,4 @@
-import { Expand, Heart, Leaf, Pause, Play, Users } from "lucide-react";
+import { Expand, Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import EmptyGallery from "../components/EmptyGallery";
@@ -107,16 +107,13 @@ export default function SlideshowPage() {
               <p className="slideshow-note">Faleminderit që jeni pjesë e ditës sonë të veçantë.</p>
             </div>
             <aside className="slideshow-sidebar">
-              <Leaf className="slideshow-ornament" aria-hidden="true" />
               <div className="slideshow-caption">
-                <Heart aria-hidden="true" />
                 <span>Ngarkuar nga</span>
                 <strong>{current.guestName || "Një i ftuar"}</strong>
                 {current.message && <p>“{current.message}”</p>}
               </div>
               <SlideshowQr uploadUrl={uploadUrl} />
               <div className="slideshow-memory-count">
-                <Users aria-hidden="true" />
                 <strong>{stats.photoCount}</strong>
                 <span>momente të ndara</span>
               </div>
