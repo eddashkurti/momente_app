@@ -99,20 +99,25 @@ export default function SlideshowPage() {
         </section>
       ) : current ? (
         <>
-          <div className="slideshow-photo-frame" key={current.id}>
-            <img src={current.optimizedUrl} alt="Fotografi nga dasma" />
-          </div>
-          {(current.guestName || current.message) && (
-            <div className="slideshow-caption">
-              {current.guestName && <strong>{current.guestName}</strong>}
-              {current.message && <p>“{current.message}”</p>}
+          <section className="slideshow-stage">
+            <div className="slideshow-photo-frame" key={current.id}>
+              <img src={current.optimizedUrl} alt="Fotografi nga dasma" />
             </div>
-          )}
+            <aside className="slideshow-sidebar">
+              {(current.guestName || current.message) && (
+                <div className="slideshow-caption">
+                  {current.guestName && <strong>{current.guestName}</strong>}
+                  {current.message && <p>“{current.message}”</p>}
+                </div>
+              )}
+              <SlideshowQr uploadUrl={uploadUrl} />
+            </aside>
+          </section>
           {featured && <div className="featured-badge">Momenti i veçantë</div>}
         </>
       ) : null}
 
-      <SlideshowQr uploadUrl={uploadUrl} />
+      {showThankYou && <SlideshowQr uploadUrl={uploadUrl} />}
       <div className="slideshow-controls">
         <button type="button" onClick={() => setPaused((value) => !value)} aria-label={paused ? "Vazhdo" : "Pauzo"}>
           {paused ? <Play /> : <Pause />}
