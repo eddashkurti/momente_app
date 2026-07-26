@@ -37,8 +37,14 @@ class ValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validate_presign_files(files)
 
+    def test_accepts_modern_mobile_types(self):
+        for content_type in ("image/heic", "image/heif", "image/avif", "image/webp"):
+            with self.subTest(content_type=content_type):
+                validate_presign_files([valid_file(originalContentType=content_type)])
+
     def test_rejects_unsupported_type(self):
-        validate_presign_files([valid_file(originalContentType="image/heic")])
+        with self.assertRaises(ValidationError):
+            validate_presign_files([valid_file(originalContentType="image/tiff")])
 
     def test_rejects_oversized_original(self):
         with self.assertRaises(ValidationError):

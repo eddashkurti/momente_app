@@ -13,6 +13,9 @@ EXTENSIONS = {
     "image/webp": ".webp",
     "image/heic": ".heic",
     "image/heif": ".heif",
+    "image/avif": ".avif",
+    "image/gif": ".gif",
+    "image/bmp": ".bmp",
 }
 
 
@@ -48,7 +51,7 @@ def validate_presign_files(files):
         client_ids.add(client_id)
         content_type = item["originalContentType"]
         if content_type not in ALLOWED_ORIGINAL_TYPES:
-            raise ValidationError("Only JPG, PNG, WebP, HEIC, and HEIF originals are accepted.")
+            raise ValidationError("Unsupported original image format.")
         if item["optimizedContentType"] != "image/jpeg":
             raise ValidationError("Optimized files must be JPEG.")
         for field in ("originalSize", "optimizedSize"):

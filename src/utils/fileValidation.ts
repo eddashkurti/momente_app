@@ -45,9 +45,36 @@ export function validateSelectedFiles(files: File[], alreadySelected: File[] = [
 }
 
 export function getSupportedContentType(file: File) {
-  if (/\.heic$/i.test(file.name) || file.type.toLowerCase() === "image/heic") return "image/heic";
-  if (/\.heif$/i.test(file.name) || file.type.toLowerCase() === "image/heif") return "image/heif";
-  return eventConfig.upload.acceptedTypes.includes(file.type as never) ? file.type : null;
+  const mime = file.type.toLowerCase().split(";")[0].trim();
+  const extension = file.name.match(/\.([^.]+)$/)?.[1]?.toLowerCase();
+  const canonicalByMime: Record<string, string> = {
+    "image/jpeg": "image/jpeg",
+    "image/jpg": "image/jpeg",
+    "image/pjpeg": "image/jpeg",
+    "image/png": "image/png",
+    "image/x-png": "image/png",
+    "image/webp": "image/webp",
+    "image/heic": "image/heic",
+    "image/heif": "image/heif",
+    "image/avif": "image/avif",
+    "image/gif": "image/gif",
+    "image/bmp": "image/bmp",
+    "image/x-ms-bmp": "image/bmp",
+  };
+  const canonicalByExtension: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    jfif: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    heic: "image/heic",
+    heif: "image/heif",
+    avif: "image/avif",
+    gif: "image/gif",
+    bmp: "image/bmp",
+  };
+  const canonical = canonicalByMime[mime] ?? (extension ? canonicalByExtension[extension] : null);
+  return canonical && eventConfig.upload.acceptedTypes.includes(canonical as never) ? canonical : null;
 }
 
 function fileKey(file: File) {

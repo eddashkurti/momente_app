@@ -30,7 +30,7 @@ export default function UploadDropzone({ disabled, onFiles }: UploadDropzoneProp
         ref={inputRef}
         className="visually-hidden"
         type="file"
-        accept={eventConfig.upload.acceptedExtensions.join(",")}
+        accept={`image/*,${eventConfig.upload.acceptedExtensions.join(",")}`}
         multiple
         disabled={disabled}
         onChange={(event: ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +44,7 @@ export default function UploadDropzone({ disabled, onFiles }: UploadDropzoneProp
       <button className="button button-primary" type="button" disabled={disabled} onClick={() => inputRef.current?.click()}>
         <Camera size={18} /> Zgjidh fotografitë
       </button>
-      <small>JPG, PNG, WebP ose HEIC · maksimumi 10 MB secila</small>
+      <small>Fotografi nga çdo telefon · maksimumi 10 MB secila</small>
     </div>
   );
 }

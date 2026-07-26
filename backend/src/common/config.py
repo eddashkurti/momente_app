@@ -13,7 +13,10 @@ UPLOAD_URL_TTL = 600
 DOWNLOAD_URL_TTL = 120
 MAX_FILE_SIZE = 10 * 1024 * 1024
 MAX_FILES = 5
-ALLOWED_ORIGINAL_TYPES = {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}
+ALLOWED_ORIGINAL_TYPES = {
+    "image/jpeg", "image/png", "image/webp", "image/heic",
+    "image/heif", "image/avif", "image/gif", "image/bmp",
+}
 
 
 def gallery_is_open(now=None):
