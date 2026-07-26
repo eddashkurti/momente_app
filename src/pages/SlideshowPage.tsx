@@ -101,13 +101,13 @@ export default function SlideshowPage() {
         <>
           <div className="slideshow-photo-frame" key={current.id}>
             <img src={current.optimizedUrl} alt="Fotografi nga dasma" />
+            {(current.guestName || current.message) && (
+              <div className="slideshow-caption">
+                {current.guestName && <strong>{current.guestName}</strong>}
+                {current.message && <p>“{current.message}”</p>}
+              </div>
+            )}
           </div>
-          {(current.guestName || current.message) && (
-            <div className="slideshow-caption">
-              {current.guestName && <strong>{current.guestName}</strong>}
-              {current.message && <p>“{current.message}”</p>}
-            </div>
-          )}
           {featured && <div className="featured-badge">Momenti i veçantë</div>}
         </>
       ) : null}
