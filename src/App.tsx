@@ -6,6 +6,7 @@ import GalleryPage from "./pages/GalleryPage";
 import SlideshowPage from "./pages/SlideshowPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import DevAdminPage from "./pages/DevAdminPage";
+import OrganizerPage from "./pages/OrganizerPage";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/organizer" element={<OrganizerPage />} />
         {import.meta.env.DEV && <Route path="/dev-admin" element={<DevAdminPage />} />}
         <Route path="*" element={<NotFoundPage />} />
       </Route>

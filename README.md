@@ -85,6 +85,7 @@ http://localhost:5173
 - `/upload` — guest upload form
 - `/gallery` — shared ordered gallery
 - `/slideshow` — television/projector mode
+- `/organizer` — private organizer login and emergency photo removal
 - `/dev-admin` — development-only controls; unavailable in production mode
 
 To preview the closing slideshow before the configured time:

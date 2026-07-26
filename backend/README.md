@@ -53,6 +53,10 @@ aws cognito-idp admin-create-user \
 The emergency delete endpoint requires a valid Cognito access token. There is no
 admin secret in the browser bundle.
 
+The production frontend exposes the private organizer interface at `/organizer`.
+It is not linked from guest navigation. On first sign-in, Cognito requires the
+temporary password from the invitation email to be replaced.
+
 ## Local tests
 
 ```bash
