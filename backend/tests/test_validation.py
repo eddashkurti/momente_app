@@ -49,6 +49,17 @@ class ValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validate_presign_files([valid_file(originalFileName="../photo.jpg")])
 
+    def test_accepts_international_filename_with_combining_marks(self):
+        filename = "تَذْكِرَةٌ قُرْآنِيَّةٌ مِنَ الْأَنْوَاءِ.png"
+        result = validate_presign_files(
+            [valid_file(originalFileName=filename, originalContentType="image/png")]
+        )
+        self.assertEqual(result[0]["originalFileName"], filename)
+
+    def test_rejects_windows_path_filename(self):
+        with self.assertRaises(ValidationError):
+            validate_presign_files([valid_file(originalFileName=r"..\photo.jpg")])
+
     def test_rejects_unknown_event(self):
         with self.assertRaises(ValidationError):
             validate_event("another-event")

@@ -1,5 +1,4 @@
-import re
-from pathlib import Path
+import unicodedata
 
 from common.config import (
     ALLOWED_ORIGINAL_TYPES,
@@ -8,7 +7,6 @@ from common.config import (
     MAX_FILES,
 )
 
-SAFE_NAME = re.compile(r"^[\w .,'()\-]+$", re.UNICODE)
 EXTENSIONS = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
 
 
@@ -52,13 +50,18 @@ def validate_presign_files(files):
             if not isinstance(size, int) or not 1 <= size <= MAX_FILE_SIZE:
                 raise ValidationError(f"{field} must be between 1 byte and 10 MB.")
         filename = item["originalFileName"]
+        normalized_filename = (
+            unicodedata.normalize("NFC", filename) if isinstance(filename, str) else filename
+        )
         if (
-            not isinstance(filename, str)
-            or not 1 <= len(filename) <= 180
-            or Path(filename).name != filename
-            or not SAFE_NAME.match(filename)
+            not isinstance(normalized_filename, str)
+            or not 1 <= len(normalized_filename) <= 180
+            or "/" in normalized_filename
+            or "\\" in normalized_filename
+            or any(unicodedata.category(char).startswith("C") for char in normalized_filename)
         ):
             raise ValidationError("Invalid original filename.")
+        item["originalFileName"] = normalized_filename
     return files
 
 
