@@ -104,16 +104,15 @@ export default function SlideshowPage() {
               <div className="slideshow-photo-frame" key={current.id}>
                 <img src={current.optimizedUrl} alt="Fotografi nga dasma" />
               </div>
-              <p className="slideshow-note">Faleminderit që jeni pjesë e ditës sonë të veçantë.</p>
             </div>
             <aside className="slideshow-sidebar">
-              <div className="slideshow-caption">
+              <div className="slideshow-sidebar-card slideshow-caption">
                 <span>Ngarkuar nga</span>
                 <strong>{current.guestName || "Një i ftuar"}</strong>
                 {current.message && <p>“{current.message}”</p>}
               </div>
               <SlideshowQr uploadUrl={uploadUrl} />
-              <div className="slideshow-memory-count">
+              <div className="slideshow-sidebar-card slideshow-memory-count">
                 <strong>{stats.photoCount}</strong>
                 <span>momente të ndara</span>
               </div>
@@ -147,7 +146,7 @@ function SlideshowBrand() {
 
 function SlideshowQr({ uploadUrl }: { uploadUrl: string }) {
   return (
-    <aside className="slideshow-qr">
+    <aside className="slideshow-sidebar-card slideshow-qr">
       <QRCodeSVG value={uploadUrl} size={108} bgColor="#fffaf3" fgColor="#28211c" level="M" />
       <div><strong>Skano dhe ndaj</strong><span>fotografitë e tua</span></div>
     </aside>
