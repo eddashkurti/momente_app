@@ -1,4 +1,4 @@
-import { Expand, Pause, Play } from "lucide-react";
+import { Expand, Heart, Leaf, Pause, Play, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import EmptyGallery from "../components/EmptyGallery";
@@ -78,7 +78,7 @@ export default function SlideshowPage() {
   if (!current && !showThankYou) {
     return (
       <main className="slideshow slideshow-empty">
-        <div className="slideshow-brand"><strong>Momente</strong><span>Enis & Agnesa</span></div>
+        <SlideshowBrand />
         <EmptyGallery compact />
         <SlideshowQr uploadUrl={uploadUrl} />
       </main>
@@ -87,7 +87,7 @@ export default function SlideshowPage() {
 
   return (
     <main className="slideshow">
-      <div className="slideshow-brand"><strong>Momente</strong><span>Enis & Agnesa</span></div>
+      <SlideshowBrand />
       {showThankYou ? (
         <section className="thank-you-slide">
           <span>🤍</span>
@@ -100,17 +100,26 @@ export default function SlideshowPage() {
       ) : current ? (
         <>
           <section className="slideshow-stage">
-            <div className="slideshow-photo-frame" key={current.id}>
-              <img src={current.optimizedUrl} alt="Fotografi nga dasma" />
+            <div className="slideshow-main">
+              <div className="slideshow-photo-frame" key={current.id}>
+                <img src={current.optimizedUrl} alt="Fotografi nga dasma" />
+              </div>
+              <p className="slideshow-note">Faleminderit që jeni pjesë e ditës sonë të veçantë.</p>
             </div>
             <aside className="slideshow-sidebar">
-              {(current.guestName || current.message) && (
-                <div className="slideshow-caption">
-                  {current.guestName && <strong>{current.guestName}</strong>}
-                  {current.message && <p>“{current.message}”</p>}
-                </div>
-              )}
+              <Leaf className="slideshow-ornament" aria-hidden="true" />
+              <div className="slideshow-caption">
+                <Heart aria-hidden="true" />
+                <span>Ngarkuar nga</span>
+                <strong>{current.guestName || "Një i ftuar"}</strong>
+                {current.message && <p>“{current.message}”</p>}
+              </div>
               <SlideshowQr uploadUrl={uploadUrl} />
+              <div className="slideshow-memory-count">
+                <Users aria-hidden="true" />
+                <strong>{stats.photoCount}</strong>
+                <span>momente të ndara</span>
+              </div>
             </aside>
           </section>
           {featured && <div className="featured-badge">Momenti i veçantë</div>}
@@ -127,6 +136,15 @@ export default function SlideshowPage() {
         </button>
       </div>
     </main>
+  );
+}
+
+function SlideshowBrand() {
+  return (
+    <div className="slideshow-brand">
+      <strong>Momente</strong>
+      <span><b>{eventConfig.couple.display}</b><small>{eventConfig.dateDisplay}</small></span>
+    </div>
   );
 }
 
