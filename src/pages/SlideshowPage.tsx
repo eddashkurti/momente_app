@@ -1,4 +1,4 @@
-import { Expand, Pause, Play, QrCode } from "lucide-react";
+import { Expand, Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import EmptyGallery from "../components/EmptyGallery";
@@ -78,7 +78,7 @@ export default function SlideshowPage() {
   if (!current && !showThankYou) {
     return (
       <main className="slideshow slideshow-empty">
-        <div className="slideshow-brand">Momente <span>·</span> Enis & Agnesa</div>
+        <div className="slideshow-brand"><strong>Momente</strong><span>Enis & Agnesa</span></div>
         <EmptyGallery compact />
         <SlideshowQr uploadUrl={uploadUrl} />
       </main>
@@ -87,7 +87,7 @@ export default function SlideshowPage() {
 
   return (
     <main className="slideshow">
-      <div className="slideshow-brand">Momente <span>·</span> Enis & Agnesa</div>
+      <div className="slideshow-brand"><strong>Momente</strong><span>Enis & Agnesa</span></div>
       {showThankYou ? (
         <section className="thank-you-slide">
           <span>🤍</span>
@@ -134,7 +134,7 @@ function SlideshowQr({ uploadUrl }: { uploadUrl: string }) {
   return (
     <aside className="slideshow-qr">
       <QRCodeSVG value={uploadUrl} size={108} bgColor="#fffaf3" fgColor="#28211c" level="M" />
-      <div><QrCode size={16} /><strong>Skano dhe ndaj</strong><span>fotografitë e tua</span></div>
+      <div><strong>Skano dhe ndaj</strong><span>fotografitë e tua</span></div>
     </aside>
   );
 }
