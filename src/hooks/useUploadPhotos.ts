@@ -2,6 +2,7 @@ import { useState } from "react";
 import { eventConfig } from "../config/event";
 import { photoRepository } from "../services";
 import { createOptimizedImage } from "../utils/imageCompression";
+import { getSupportedContentType } from "../utils/fileValidation";
 import { getUploaderSessionId } from "../utils/session";
 
 interface UploadOptions {
@@ -25,12 +26,14 @@ export function useUploadPhotos() {
       const records = [];
       for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
+        const originalContentType = getSupportedContentType(file);
+        if (!originalContentType) throw new Error(`Unsupported image type: ${file.name}`);
         setStage(`Po optimizohet fotografia ${index + 1} nga ${files.length}…`);
         const optimizedBlob = await createOptimizedImage(file);
         records.push({
           eventId: eventConfig.eventId,
           originalFileName: file.name,
-          originalContentType: file.type,
+          originalContentType,
           optimizedContentType: "image/jpeg" as const,
           originalSize: file.size,
           optimizedSize: optimizedBlob.size,

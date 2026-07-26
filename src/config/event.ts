@@ -13,8 +13,8 @@ export const eventConfig = {
   upload: {
     maxFiles: 5,
     maxFileSizeBytes: 10 * 1024 * 1024,
-    acceptedTypes: ["image/jpeg", "image/png", "image/webp"],
-    acceptedExtensions: [".jpg", ".jpeg", ".png", ".webp"],
+    acceptedTypes: ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
+    acceptedExtensions: [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"],
     maxNameLength: 40,
     maxMessageLength: 120,
   },

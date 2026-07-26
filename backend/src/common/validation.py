@@ -7,7 +7,13 @@ from common.config import (
     MAX_FILES,
 )
 
-EXTENSIONS = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
+EXTENSIONS = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/heic": ".heic",
+    "image/heif": ".heif",
+}
 
 
 class ValidationError(ValueError):
@@ -42,7 +48,7 @@ def validate_presign_files(files):
         client_ids.add(client_id)
         content_type = item["originalContentType"]
         if content_type not in ALLOWED_ORIGINAL_TYPES:
-            raise ValidationError("Only JPG, PNG, and WebP originals are accepted.")
+            raise ValidationError("Only JPG, PNG, WebP, HEIC, and HEIF originals are accepted.")
         if item["optimizedContentType"] != "image/jpeg":
             raise ValidationError("Optimized files must be JPEG.")
         for field in ("originalSize", "optimizedSize"):

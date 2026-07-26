@@ -23,13 +23,8 @@ export function validateSelectedFiles(files: File[], alreadySelected: File[] = [
     }
     existingKeys.add(key);
 
-    if (!eventConfig.upload.acceptedTypes.includes(file.type as never)) {
-      const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
-      errors.push(
-        isHeic
-          ? `${file.name}: formati HEIC nuk mbështetet ende. Zgjidhni JPG, PNG ose WebP.`
-          : `${file.name}: formati nuk mbështetet.`,
-      );
+    if (!getSupportedContentType(file)) {
+      errors.push(`${file.name}: formati nuk mbështetet.`);
       return false;
     }
 
@@ -47,6 +42,12 @@ export function validateSelectedFiles(files: File[], alreadySelected: File[] = [
   });
 
   return { valid, errors };
+}
+
+export function getSupportedContentType(file: File) {
+  if (/\.heic$/i.test(file.name) || file.type.toLowerCase() === "image/heic") return "image/heic";
+  if (/\.heif$/i.test(file.name) || file.type.toLowerCase() === "image/heif") return "image/heif";
+  return eventConfig.upload.acceptedTypes.includes(file.type as never) ? file.type : null;
 }
 
 function fileKey(file: File) {

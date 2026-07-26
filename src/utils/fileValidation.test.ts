@@ -12,6 +12,12 @@ describe("validateSelectedFiles", () => {
     expect(result.errors).toHaveLength(0);
   });
 
+  it("accepts HEIC from iPhones even when the browser omits its MIME type", () => {
+    const result = validateSelectedFiles([makeFile("IMG_1234.HEIC", 1000, "")]);
+    expect(result.valid).toHaveLength(1);
+    expect(result.errors).toHaveLength(0);
+  });
+
   it("rejects unsupported formats", () => {
     const result = validateSelectedFiles([makeFile("photo.gif", 1000, "image/gif")]);
     expect(result.valid).toHaveLength(0);

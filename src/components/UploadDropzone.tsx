@@ -44,7 +44,7 @@ export default function UploadDropzone({ disabled, onFiles }: UploadDropzoneProp
       <button className="button button-primary" type="button" disabled={disabled} onClick={() => inputRef.current?.click()}>
         <Camera size={18} /> Zgjidh fotografitë
       </button>
-      <small>JPG, PNG ose WebP · maksimumi 10 MB secila</small>
+      <small>JPG, PNG, WebP ose HEIC · maksimumi 10 MB secila</small>
     </div>
   );
 }
