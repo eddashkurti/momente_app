@@ -45,6 +45,7 @@ export function signInOrganizer(email: string, password: string): Promise<SignIn
       onFailure: reject,
       newPasswordRequired: (attributes) => {
         const safeAttributes = { ...attributes };
+        delete safeAttributes.email;
         delete safeAttributes.email_verified;
         resolve({
           status: "NEW_PASSWORD_REQUIRED",
