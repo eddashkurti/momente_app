@@ -26,9 +26,9 @@ export function useUploadPhotos() {
       const records = [];
       for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
-        const originalContentType = getSupportedContentType(file);
+        const originalContentType = await getSupportedContentType(file);
         if (!originalContentType) throw new Error(`Unsupported image type: ${file.name}`);
-        setStage(`Po optimizohet fotografia ${index + 1} nga ${files.length}…`);
+        setStage(`Po përgatitet fotografia ${index + 1} nga ${files.length}…`);
         const optimizedBlob = await createOptimizedImage(file);
         records.push({
           eventId: eventConfig.eventId,

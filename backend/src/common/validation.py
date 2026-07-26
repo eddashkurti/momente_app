@@ -1,22 +1,12 @@
 import unicodedata
 
 from common.config import (
-    ALLOWED_ORIGINAL_TYPES,
     EVENT_ID,
     MAX_FILE_SIZE,
     MAX_FILES,
 )
 
-EXTENSIONS = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/webp": ".webp",
-    "image/heic": ".heic",
-    "image/heif": ".heif",
-    "image/avif": ".avif",
-    "image/gif": ".gif",
-    "image/bmp": ".bmp",
-}
+GENERIC_BINARY_TYPES = {"application/octet-stream", "binary/octet-stream"}
 
 
 class ValidationError(ValueError):
@@ -50,8 +40,16 @@ def validate_presign_files(files):
             raise ValidationError("Invalid or duplicate clientId.")
         client_ids.add(client_id)
         content_type = item["originalContentType"]
-        if content_type not in ALLOWED_ORIGINAL_TYPES:
-            raise ValidationError("Unsupported original image format.")
+        if (
+            not isinstance(content_type, str)
+            or not 1 <= len(content_type) <= 100
+            or content_type == "image/svg+xml"
+            or not (
+                content_type.startswith("image/")
+                or content_type in GENERIC_BINARY_TYPES
+            )
+        ):
+            raise ValidationError("Original upload must be a raster image.")
         if item["optimizedContentType"] != "image/jpeg":
             raise ValidationError("Optimized files must be JPEG.")
         for field in ("originalSize", "optimizedSize"):

@@ -7,13 +7,22 @@ from botocore.exceptions import ClientError
 from common.aws import app_is_enabled, s3, table
 from common.config import BUCKET_NAME, gallery_is_open
 from common.http import error, parse_json, path_parameter, response
+from common.image_signatures import detect_image_content_type
 from common.validation import ValidationError, validate_event, validate_submission
 
 
-def _verify_object(key, expected_type, expected_size):
+def _verify_object(key, expected_type, expected_size, require_jpeg=False):
     head = s3.head_object(Bucket=BUCKET_NAME, Key=key)
     if head.get("ContentType") != expected_type or head.get("ContentLength") != expected_size:
         raise ValidationError("Uploaded object does not match the approved metadata.")
+    body = s3.get_object(Bucket=BUCKET_NAME, Key=key, Range="bytes=0-4095")["Body"]
+    try:
+        detected_type = detect_image_content_type(body.read(4096))
+    finally:
+        body.close()
+    if not detected_type or (require_jpeg and detected_type != "image/jpeg"):
+        raise ValidationError("Uploaded object is not a valid approved image.")
+    return detected_type
 
 
 def handler(event, _context):
@@ -36,7 +45,7 @@ def handler(event, _context):
         if not pending:
             return error(409, "UPLOAD_NOT_FOUND", "The upload request expired or was already confirmed.")
         try:
-            _verify_object(
+            detected_original_type = _verify_object(
                 pending["originalKey"],
                 pending["originalContentType"],
                 int(pending["originalSize"]),
@@ -45,9 +54,11 @@ def handler(event, _context):
                 pending["optimizedKey"],
                 "image/jpeg",
                 int(pending["optimizedSize"]),
+                require_jpeg=True,
             )
         except (ClientError, ValidationError):
             return error(409, "UPLOAD_INCOMPLETE", "Both approved photo objects must be uploaded first.")
+        pending["originalContentType"] = detected_original_type
 
         counter = table.update_item(
             Key={"PK": f"EVENT#{event_id}", "SK": "COUNTER"},

@@ -67,8 +67,12 @@ python -m unittest discover -s tests -v
 
 - Presigned upload URLs expire after 10 minutes.
 - Original download URLs expire after 2 minutes.
-- Uploads accept JPEG, PNG, and WebP originals up to 10 MB.
+- Uploads accept raster images up to 10 MB based on their real file signature, not a
+  short filename-extension whitelist. Browser-compatible files are decoded directly;
+  HEIC/HEIF and TIFF-family files are converted client-side.
 - Optimized objects must be JPEG and at most 10 MB.
+- The confirmation Lambda verifies both objects' byte signatures before publishing a
+  photo and records the detected original MIME type.
 - Public upload, gallery, and download endpoints close at the configured timestamp.
 - Public endpoints also return `503 APP_DISABLED` when the cost guard is active.
 - Pending presign records expire automatically through DynamoDB TTL.

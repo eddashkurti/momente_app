@@ -1,6 +1,5 @@
 import { Camera, ImagePlus } from "lucide-react";
 import { useRef, type ChangeEvent, type DragEvent } from "react";
-import { eventConfig } from "../config/event";
 
 interface UploadDropzoneProps {
   disabled?: boolean;
@@ -30,7 +29,7 @@ export default function UploadDropzone({ disabled, onFiles }: UploadDropzoneProp
         ref={inputRef}
         className="visually-hidden"
         type="file"
-        accept={`image/*,${eventConfig.upload.acceptedExtensions.join(",")}`}
+        accept="image/*"
         multiple
         disabled={disabled}
         onChange={(event: ChangeEvent<HTMLInputElement>) => {

@@ -7,6 +7,7 @@ import UploadDropzone from "../components/UploadDropzone";
 import { eventConfig, isGalleryOpen } from "../config/event";
 import { useUploadPhotos } from "../hooks/useUploadPhotos";
 import { validateSelectedFiles } from "../utils/fileValidation";
+import { ImageProcessingError } from "../utils/imageCompression";
 
 export default function UploadPage() {
   const [files, setFiles] = useState<File[]>([]);
@@ -18,8 +19,8 @@ export default function UploadPage() {
   const { upload, progress, stage, uploading, reset } = useUploadPhotos();
   const galleryOpen = isGalleryOpen();
 
-  function addFiles(next: File[]) {
-    const result = validateSelectedFiles(next, files);
+  async function addFiles(next: File[]) {
+    const result = await validateSelectedFiles(next, files);
     setFiles((current) => [...current, ...result.valid]);
     setErrors(result.errors);
   }
@@ -42,7 +43,11 @@ export default function UploadPage() {
       setMessage("");
     } catch (caught) {
       console.error(caught);
-      setErrors(["Ngarkimi dështoi. Provoni përsëri."]);
+      setErrors([
+        caught instanceof ImageProcessingError
+          ? caught.userMessage
+          : "Ngarkimi dështoi. Provoni përsëri.",
+      ]);
     }
   }
 

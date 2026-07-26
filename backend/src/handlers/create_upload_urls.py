@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from common.aws import app_is_enabled, s3, table
 from common.config import BUCKET_NAME, UPLOAD_URL_TTL, gallery_is_open
 from common.http import error, parse_json, path_parameter, response
-from common.validation import EXTENSIONS, ValidationError, validate_event, validate_presign_files
+from common.validation import ValidationError, validate_event, validate_presign_files
 
 
 def handler(event, _context):
@@ -25,7 +25,7 @@ def handler(event, _context):
     uploads = []
     for item in files:
         photo_id = str(uuid.uuid4())
-        original_key = f"originals/{event_id}/{date_path}/{photo_id}{EXTENSIONS[item['originalContentType']]}"
+        original_key = f"originals/{event_id}/{date_path}/{photo_id}.original"
         optimized_key = f"optimized/{event_id}/{date_path}/{photo_id}.jpg"
         pending = {
             "PK": f"EVENT#{event_id}",
