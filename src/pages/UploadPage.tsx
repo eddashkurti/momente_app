@@ -101,7 +101,7 @@ export default function UploadPage() {
                 value={guestName}
                 maxLength={eventConfig.upload.maxNameLength}
                 disabled={uploading}
-                placeholder="P.sh. Arta"
+                placeholder="P.sh. Edda"
                 onChange={(event: ChangeEvent<HTMLInputElement>) => setGuestName(event.target.value)}
               />
               <small>{guestName.length}/{eventConfig.upload.maxNameLength}</small>
