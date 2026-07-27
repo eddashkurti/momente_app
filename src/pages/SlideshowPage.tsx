@@ -18,7 +18,7 @@ export default function SlideshowPage() {
       /\/$/,
       "",
     );
-    return `${configuredUrl || window.location.origin}/`;
+    return `${configuredUrl || window.location.origin}/upload`;
   }, []);
   const current = viewModels[index] ?? null;
 
