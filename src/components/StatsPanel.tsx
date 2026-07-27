@@ -17,7 +17,7 @@ export default function StatsPanel({ stats }: { stats: PhotoStats }) {
       </article>
       <article className="stat-card">
         <Clock3 aria-hidden="true" />
-        <strong className="stat-relative">{formatRelativeTime(stats.lastUploadedAt)}</strong>
+        <strong>{formatRelativeTime(stats.lastUploadedAt)}</strong>
         <span>fotografia e fundit</span>
       </article>
     </section>

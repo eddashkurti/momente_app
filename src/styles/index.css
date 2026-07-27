@@ -126,7 +126,6 @@ img { display: block; max-width: 100%; }
 .stat-card { min-height: 138px; padding: 24px; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 14px; align-content: center; background: rgba(255,253,249,.72); border: 1px solid rgba(183,151,93,.19); border-radius: var(--radius-md); }
 .stat-card svg { grid-row: 1 / span 2; align-self: center; color: var(--gold-dark); }
 .stat-card strong { align-self: end; font-family: "Cormorant Garamond", serif; font-size: 34px; line-height: .9; font-weight: 600; color: var(--ink); }
-.stat-card .stat-relative { font-family: "Manrope", sans-serif; font-size: 15px; line-height: 1.2; }
 .stat-card span { align-self: start; margin-top: 5px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--taupe-500); }
 
 .recent-section { padding: 22px 0 65px; }
